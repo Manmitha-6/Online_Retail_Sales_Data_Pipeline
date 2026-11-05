@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Logs
+logs/*.log
+
+# Intermediate data
+data/checkpoints/
+data/processed/online_retail_extracted.csv
+
+# Keep DVC tracking files
+!*.dvc
+
+# Keep project documentation
+!README.md
