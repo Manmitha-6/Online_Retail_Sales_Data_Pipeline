@@ -1,0 +1,301 @@
+
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{setspace}
+
+\geometry{margin=1in}
+\onehalfspacing
+
+\title{
+    \textbf{ONLINE RETAIL SALES DATA PIPELINE}\\
+    \large Mini Project Report
+}
+\author{Manmitha}
+\date{November 2026}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\chapter{Introduction}
+
+\section{Project Overview}
+
+The Online Retail Sales Data Pipeline is a reusable
+ETL (Extract, Transform, Load) project developed to
+clean and process online retail transaction data.
+
+The project uses Python and Pandas to extract data
+from an Excel file, perform data cleaning, generate
+business-related features, validate the processed
+dataset, and export the results in CSV and Parquet
+formats.
+
+\section{Project Objective}
+
+The main objectives are:
+
+\begin{itemize}
+    \item Load and process online retail transaction data.
+    \item Remove invalid and duplicate records.
+    \item Handle missing values appropriately.
+    \item Generate useful customer and sales features.
+    \item Develop reusable ETL modules.
+    \item Implement logging and exception handling.
+    \item Use checkpointing to reuse processed data.
+    \item Validate the final dataset.
+    \item Track dataset versions using DVC.
+    \item Export data in CSV and Parquet formats.
+\end{itemize}
+
+\chapter{Dataset Description}
+
+\section{Dataset Information}
+
+The project uses the Online Retail dataset from
+the UCI Machine Learning Repository.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Attribute} & \textbf{Value}\\
+\midrule
+Dataset Name & Online Retail\\
+Original File & Online Retail.xlsx\\
+Original Records & 541,909\\
+Original Columns & 8\\
+Final Records & 526,052\\
+Final Columns & 17\\
+Output Formats & CSV and Parquet\\
+\bottomrule
+\end{tabular}
+\caption{Dataset Information}
+\end{table}
+
+\section{Original Dataset Attributes}
+
+The original dataset contains the following columns:
+
+\begin{itemize}
+    \item InvoiceNo: Invoice number.
+    \item StockCode: Product identification code.
+    \item Description: Product description.
+    \item Quantity: Number of products purchased.
+    \item InvoiceDate: Date and time of transaction.
+    \item UnitPrice: Price per unit.
+    \item CustomerID: Customer identifier.
+    \item Country: Customer's country.
+\end{itemize}
+
+\chapter{Methodology}
+
+\section{ETL Pipeline}
+
+The project follows three main stages:
+
+\begin{enumerate}
+    \item \textbf{Extract:} Load transaction records
+    from the Excel dataset.
+    \item \textbf{Transform:} Clean the data, handle
+    invalid records, and generate additional features.
+    \item \textbf{Load:} Save the processed dataset
+    in CSV and Parquet formats.
+\end{enumerate}
+
+\section{Data Cleaning}
+
+The following operations were performed:
+
+\begin{itemize}
+    \item Removed cancelled invoices.
+    \item Excluded transactions with negative quantities.
+    \item Removed records with negative unit prices.
+    \item Removed duplicate records.
+    \item Replaced missing product descriptions with
+    \texttt{Unknown}.
+    \item Retained missing CustomerID records and
+    created an indicator column.
+    \item Retained zero-price transactions and
+    created an indicator column.
+    \item Converted InvoiceDate into datetime format.
+\end{itemize}
+
+\section{Data Cleaning Summary}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lr}
+\toprule
+\textbf{Operation} & \textbf{Records}\\
+\midrule
+Original records & 541,909\\
+Cancelled invoices removed & 9,288\\
+Negative quantity records excluded & 1,336\\
+Negative unit-price records removed & 2\\
+Duplicate records removed & 5,231\\
+\midrule
+Final processed records & 526,052\\
+\bottomrule
+\end{tabular}
+\caption{Data Cleaning Summary}
+\end{table}
+
+\section{Feature Engineering}
+
+The following features were generated:
+
+\begin{itemize}
+    \item TotalAmount
+    \item InvoiceMonth
+    \item InvoiceYear
+    \item InvoiceDay
+    \item CustomerTotalOrders
+    \item AverageOrderValue
+    \item TotalCustomerSpending
+\end{itemize}
+
+The transaction amount is calculated as:
+
+\[
+\text{TotalAmount} =
+\text{Quantity} \times \text{UnitPrice}
+\]
+
+Customer-level features are calculated using
+available CustomerID values.
+
+\chapter{Implementation}
+
+\section{Technology Stack}
+
+The project uses:
+
+\begin{itemize}
+    \item Python
+    \item Pandas
+    \item Python Calamine
+    \item PyArrow
+    \item Jupyter Notebook
+    \item Git and GitHub
+    \item DVC
+\end{itemize}
+
+\section{Reusable Modules}
+
+The source code is organized into reusable modules:
+
+\begin{itemize}
+    \item \texttt{data\_loader.py}: Loads Excel data.
+    \item \texttt{data\_cleaning.py}: Performs data cleaning.
+    \item \texttt{feature\_engineering.py}: Generates
+    additional features.
+    \item \texttt{validation.py}: Validates processed data.
+    \item \texttt{pipeline.py}: Coordinates the ETL process.
+\end{itemize}
+
+\section{Logging and Exception Handling}
+
+Logging is implemented to record pipeline execution
+and processing information.
+
+Exception handling is used to manage errors during
+data processing and pipeline execution.
+
+\section{Checkpointing}
+
+Checkpointing allows the pipeline to reuse previously
+processed intermediate data when available, reducing
+unnecessary repeated processing.
+
+\section{Version Tracking}
+
+Git is used for source code version tracking, while
+DVC is used to track dataset versions.
+
+The processed dataset is tracked using DVC.
+
+\chapter{Results and Validation}
+
+\section{Final Dataset}
+
+The final processed dataset contains 526,052 records
+and 17 columns.
+
+The dataset is exported in two formats:
+
+\begin{itemize}
+    \item CSV
+    \item Parquet
+\end{itemize}
+
+\section{Data Validation Results}
+
+The following validation checks were performed:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Validation Check} & \textbf{Result}\\
+\midrule
+Dataset shape & 526,052 $\times$ 17\\
+Missing required columns & 0\\
+Duplicate rows & 0\\
+Negative quantities & 0\\
+Negative unit prices & 0\\
+Cancelled invoices & 0\\
+Invalid invoice date type & False\\
+TotalAmount calculation errors & 0\\
+\bottomrule
+\end{tabular}
+\caption{Final Data Validation Results}
+\end{table}
+
+\section{CSV and Parquet Comparison}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lr}
+\toprule
+\textbf{Format} & \textbf{File Size}\\
+\midrule
+CSV & 69.00 MB\\
+Parquet & 4.25 MB\\
+\bottomrule
+\end{tabular}
+\caption{Storage Comparison}
+\end{table}
+
+Parquet requires approximately 93.84\% less storage
+than the CSV output in this project.
+
+\chapter{Conclusion}
+
+The Online Retail Sales Data Pipeline was successfully
+developed to process and validate online retail
+transaction data.
+
+The project implements data extraction, cleaning,
+feature engineering, validation, logging,
+exception handling, checkpointing, and version tracking.
+
+The final dataset contains 526,052 records and
+17 columns and is available in CSV and Parquet formats.
+
+This project demonstrates the development of a
+reusable data processing pipeline and provides
+a foundation for further retail sales and
+customer analysis.
+
+\end{document}
