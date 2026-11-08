@@ -12,8 +12,8 @@ logs/*.log
 data/checkpoints/
 data/processed/online_retail_extracted.csv
 
-# Keep DVC tracking files
-!*.dvc
-
 # Keep project documentation
 !README.md
+
+# Ignore Anaconda local metadata
+anaconda_projects/

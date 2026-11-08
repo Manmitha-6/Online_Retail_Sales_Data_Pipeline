@@ -1,0 +1,33 @@
+
+# Online Retail Sales Data Pipeline Configuration
+
+paths:
+  raw_data: data/raw/Online Retail.xlsx
+  checkpoint: data/checkpoints/retail_features_checkpoint.csv
+  processed_dir: data/processed
+  log_dir: logs
+
+output:
+  csv_filename: online_retail_features.csv
+  parquet_filename: online_retail_features.parquet
+
+preprocessing:
+  remove_cancelled_invoices: true
+  remove_missing_customer_ids: true
+  remove_duplicates: true
+  remove_invalid_quantities: true
+  remove_invalid_prices: true
+
+features:
+  create_transaction_features: true
+  create_customer_features: true
+
+validation:
+  check_missing_values: true
+  check_duplicates: true
+  check_invalid_quantities: true
+  check_invalid_prices: true
+
+logging:
+  level: INFO
+  filename: pipeline.log

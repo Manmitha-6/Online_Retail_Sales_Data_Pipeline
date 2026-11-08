@@ -1,6 +1,7 @@
 
 import os
 import logging
+import yaml
 import pandas as pd
 
 from data_loader import load_excel
@@ -13,15 +14,38 @@ from validation import validate_retail_data
 
 
 # --------------------------------------------------
-# 1. Configure logging
+# 1. Load YAML Configuration
 # --------------------------------------------------
 
-LOG_FOLDER = "../logs"
+PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
+CONFIG_PATH = os.path.join(
+    PROJECT_ROOT, "config", "config.yaml"
+)
+
+with open(CONFIG_PATH, "r", encoding="utf-8") as file:
+    CONFIG = yaml.safe_load(file)
+
+
+def project_path(path):
+    return os.path.join(PROJECT_ROOT, path)
+
+
+# --------------------------------------------------
+# 2. Configure Logging
+# --------------------------------------------------
+
+LOG_FOLDER = project_path(CONFIG["paths"]["log_dir"])
 os.makedirs(LOG_FOLDER, exist_ok=True)
 
 logging.basicConfig(
-    filename=os.path.join(LOG_FOLDER, "pipeline.log"),
-    level=logging.INFO,
+    filename=os.path.join(
+        LOG_FOLDER,
+        CONFIG["logging"]["filename"]
+    ),
+    level=getattr(logging, CONFIG["logging"]["level"].upper()),
     format="%(asctime)s - %(levelname)s - %(message)s",
     force=True
 )
@@ -30,42 +54,34 @@ logger = logging.getLogger(__name__)
 
 
 # --------------------------------------------------
-# 2. Main ETL Pipeline
+# 3. Main ETL Pipeline
 # --------------------------------------------------
 
 def run_pipeline(
-    raw_path="../data/raw/Online Retail.xlsx",
-    checkpoint_path="../data/checkpoints/retail_features_checkpoint.csv",
-    processed_folder="../data/processed"
+    raw_path=None,
+    checkpoint_path=None,
+    processed_folder=None
 ):
 
-    """
-    Complete Online Retail ETL Pipeline.
-
-    1. Extract data from Excel.
-    2. Clean transaction data.
-    3. Generate transaction features.
-    4. Generate customer features.
-    5. Save and reuse checkpoints.
-    6. Validate the dataset.
-    7. Export CSV and Parquet files.
-    """
-
     try:
-
         logger.info("Retail data pipeline started.")
 
-        # Create required folders
-        checkpoint_dir = os.path.dirname(checkpoint_path)
+        raw_path = raw_path or project_path(
+            CONFIG["paths"]["raw_data"]
+        )
 
-        if checkpoint_dir:
-            os.makedirs(checkpoint_dir, exist_ok=True)
+        checkpoint_path = checkpoint_path or project_path(
+            CONFIG["paths"]["checkpoint"]
+        )
 
+        processed_folder = processed_folder or project_path(
+            CONFIG["paths"]["processed_dir"]
+        )
+
+        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
         os.makedirs(processed_folder, exist_ok=True)
 
-        # --------------------------------------------------
-        # Step 1: Checkpoint loading or complete ETL
-        # --------------------------------------------------
+        # Step 1: Load checkpoint or execute ETL
 
         if os.path.exists(checkpoint_path):
 
@@ -85,44 +101,38 @@ def run_pipeline(
         else:
 
             # Step 2: Extract
-            logger.info("Extracting original Excel dataset.")
 
+            logger.info("Extracting Excel dataset.")
             df = load_excel(raw_path)
 
             # Step 3: Clean
-            logger.info("Cleaning transaction data.")
 
+            logger.info("Cleaning transaction data.")
             df_clean = clean_retail_data(df)
 
-            # Step 4: Transaction feature engineering
-            logger.info("Generating transaction features.")
+            # Step 4: Transaction features
 
+            logger.info("Generating transaction features.")
             df_clean = create_transaction_features(df_clean)
 
-            # Step 5: Customer feature engineering
-            logger.info("Generating customer features.")
+            # Step 5: Customer features
 
+            logger.info("Generating customer features.")
             df_clean = create_customer_features(df_clean)
 
-            # Step 6: Convert mixed identifiers to strings
             df_clean["InvoiceNo"] = df_clean["InvoiceNo"].astype("string")
             df_clean["StockCode"] = df_clean["StockCode"].astype("string")
 
-            # Step 7: Save checkpoint
-            df_clean.to_csv(
-                checkpoint_path,
-                index=False
-            )
+            # Step 6: Save checkpoint
+
+            df_clean.to_csv(checkpoint_path, index=False)
 
             logger.info("Checkpoint saved successfully.")
 
-        # Ensure consistent identifier types after checkpoint loading too
         df_clean["InvoiceNo"] = df_clean["InvoiceNo"].astype("string")
         df_clean["StockCode"] = df_clean["StockCode"].astype("string")
 
-        # --------------------------------------------------
-        # Step 8: Validate
-        # --------------------------------------------------
+        # Step 7: Validate
 
         logger.info("Validating processed dataset.")
 
@@ -133,28 +143,19 @@ def run_pipeline(
         for check, result in validation_report.items():
             print(f"{check}: {result}")
 
-        # --------------------------------------------------
-        # Step 9: Export CSV and Parquet
-        # --------------------------------------------------
+        # Step 8: Export CSV and Parquet
 
         csv_path = os.path.join(
             processed_folder,
-            "online_retail_features.csv"
+            CONFIG["output"]["csv_filename"]
         )
 
         parquet_path = os.path.join(
             processed_folder,
-            "online_retail_features.parquet"
+            CONFIG["output"]["parquet_filename"]
         )
 
-        logger.info("Exporting processed dataset to CSV.")
-
-        df_clean.to_csv(
-            csv_path,
-            index=False
-        )
-
-        logger.info("Exporting processed dataset to Parquet.")
+        df_clean.to_csv(csv_path, index=False)
 
         df_clean.to_parquet(
             parquet_path,
@@ -162,12 +163,8 @@ def run_pipeline(
             index=False
         )
 
-        # --------------------------------------------------
-        # Step 10: Pipeline completion
-        # --------------------------------------------------
-
         logger.info("CSV and Parquet exports completed.")
-        logger.info("Retail data pipeline completed successfully.")
+        logger.info("Pipeline completed successfully.")
 
         print("\nPIPELINE COMPLETED SUCCESSFULLY!")
         print("Final dataset shape:", df_clean.shape)
@@ -177,7 +174,9 @@ def run_pipeline(
         return df_clean
 
     except Exception:
-
         logger.exception("Retail data pipeline failed.")
-
         raise
+
+
+if __name__ == "__main__":
+    run_pipeline()
